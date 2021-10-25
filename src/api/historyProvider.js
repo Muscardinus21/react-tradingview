@@ -12,6 +12,7 @@ export default {
     console.log("FROM", from);
     console.log("TO", to);
     console.log("RESOLUTION", resolution);
+    console.log("FIRST", first);
     //example
     //https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&startTime=1634441869000&endTime=1634489749000
     // console.log(resolution);
@@ -38,7 +39,6 @@ export default {
       uri: `${api_root}${queryString}`,
       json: true,
     }).then((data) => {
-      console.log({ data });
       // if (data.Response && data.Response === "Error") {
       //   console.log("CryptoCompare API error:", data.Message);
       //   return [];
@@ -50,31 +50,18 @@ export default {
         //   ).toISOString()} - ${new Date(data.TimeTo * 1000).toISOString()}`
         // );
         const bars = data.map((el) => {
-          const [
-            time,
-            open,
-            high,
-            low,
-            close,
-            volume,
-            closeTime,
-            quotes,
-            trades,
-            buyBase,
-            quoteBase,
-            ignore,
-          ] = el;
+          const [time, open, high, low, close, volume] = el;
           return {
-            time,
-            low,
-            high,
-            open,
-            close,
-            volume,
+            time: +time,
+            low: +low,
+            high: +high,
+            open: +open,
+            close: +close,
+            volume: +volume,
           };
         });
         if (first) {
-          var lastBar = bars[bars.length - 1];
+          const lastBar = bars[bars.length - 1];
           history[symbolInfo.name] = { lastBar: lastBar };
         }
         return bars;

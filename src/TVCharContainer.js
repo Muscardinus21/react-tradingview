@@ -32,9 +32,10 @@ export default function App() {
       symbol: defaultProps.symbol,
       datafeed: Datafeed,
       interval: defaultProps.interval,
-      container_id: defaultProps.containerId,
+      container: defaultProps.containerId,
       library_path: defaultProps.libraryPath,
-      locale: getLanguageFromURL() || "en",
+      // locale: getLanguageFromURL() || "en",
+      locale: "en",
       disabled_features: [
         "use_localstorage_for_settings",
         "header_symbol_search",
@@ -77,6 +78,7 @@ export default function App() {
         console.log("Chart has loaded!");
       });
     });
+    console.log("HHHHHHHHHHHHHHH")
   }, []);
 
   return (
