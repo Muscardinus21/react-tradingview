@@ -3,37 +3,33 @@ var rp = require("request-promise").defaults({ json: true });
 const api_root = "https://api.binance.com/api/v3/klines";
 const history = {};
 
+export const RESOLUTION_VALUE = {
+  1: "1m",
+  3: "3m",
+  5: "5m",
+  15: "15m",
+  30: "30m",
+  60: "1h",
+  120: "2h",
+  240: "4h",
+  "1D": "1d",
+  "1W": "1w",
+  "1M": "1M",
+};
+
 export default {
   history: history,
 
   getBars: function (symbolInfo, resolution, from, to, first, limit) {
-    // var split_symbol = symbolInfo.name.split(/[:/]/);
-    console.log(symbolInfo.name);
     console.log("FROM", from);
     console.log("TO", to);
     console.log("RESOLUTION", resolution);
-    console.log("FIRST", first);
     //example
     //https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&startTime=1634441869000&endTime=1634489749000
-    // console.log(resolution);
-    // const url =
-    //   resolution === "D"
-    //     ? "/data/histoday"
-    //     : resolution >= 60
-    //     ? "/data/histohour"
-    //     : "/data/histominute";
-    // const qs = {
-    //   e: split_symbol[0],
-    //   fsym: split_symbol[1],
-    //   tsym: split_symbol[2],
-    //   toTs: to ? to : "",
-    //   limit: limit ? limit : 2000,
-    //   // aggregate: 1//resolution
-    // };
-    // console.log({qs})
-    const queryString = `?symbol=${symbolInfo.name}&interval=15m&startTime=${
-      from * 1000
-    }&endTime=${to * 1000}`;
+
+    const queryString = `?symbol=${symbolInfo.name}&interval=${
+      RESOLUTION_VALUE[resolution]
+    }&limit=1000&startTime=${from * 1000}&endTime=${to * 1000}`;
 
     return rp({
       uri: `${api_root}${queryString}`,
@@ -44,11 +40,6 @@ export default {
       //   return [];
       // }
       if (data.length) {
-        // console.log(
-        //   `Actually returned: ${new Date(
-        //     data.TimeFrom * 1000
-        //   ).toISOString()} - ${new Date(data.TimeTo * 1000).toISOString()}`
-        // );
         const bars = data.map((el) => {
           const [time, open, high, low, close, volume] = el;
           return {

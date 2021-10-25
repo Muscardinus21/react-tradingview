@@ -34,30 +34,23 @@ export default {
   ) => {
     // expects a symbolInfo object in response
     console.log("======resolveSymbol running");
-    console.log(symbolName);
-    // console.log('resolveSymbol:',{symbolName})
-    // var split_data = symbolName.split(/[:/]/);
-    // console.log({split_data})
-    var symbol_stub = {
+
+    const symbol_stub = {
       name: symbolName,
       description: "",
       type: "crypto",
       session: "24x7",
-      timezone: "Etc/UTC",
       ticker: symbolName,
-      exchange: symbolName,
+      // exchange: symbolName,
       minmov: 1,
-      pricescale: 100000000,
+      pricescale: 100,
       has_intraday: true,
-      intraday_multipliers: ["1", "60"],
+      has_weekly_and_monthly: true,
       supported_resolution: supportedResolutions,
       volume_precision: 8,
       data_status: "streaming",
     };
 
-    // if (split_data[2].match(/USD|EUR|JPY|AUD|GBP|KRW|CNY/)) {
-    //   symbol_stub.pricescale = 100;
-    // }
     setTimeout(function () {
       onSymbolResolvedCallback(symbol_stub);
       console.log("Resolving that symbol....", symbol_stub);

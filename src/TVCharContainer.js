@@ -14,6 +14,7 @@ const defaultProps = {
   userId: "public_user_id",
   fullscreen: true,
   autosize: true,
+  timezone: "Asia/Seoul",
   studiesOverrides: {},
 };
 
@@ -34,6 +35,7 @@ export default function App() {
       interval: defaultProps.interval,
       container: defaultProps.containerId,
       library_path: defaultProps.libraryPath,
+      timezone: defaultProps.timezone,
       // locale: getLanguageFromURL() || "en",
       locale: "en",
       disabled_features: [
@@ -49,12 +51,11 @@ export default function App() {
       autosize: defaultProps.autosize,
       studies_overrides: defaultProps.studiesOverrides,
       favorites: {
-        intervals: ["1", "3", "5", "15"],
+        intervals: ["1", "3", "5", "15", "30"],
         chartTypes: ["Area", "Line"],
       },
       // toolbar_bg: "#191919",
       overrides: {
-        "mainSeriesProperties.showCountdown": true,
         "paneProperties.background": "#202020",
         "paneProperties.vertGridProperties.color": "#191919",
         "paneProperties.horzGridProperties.color": "#191919",
@@ -78,7 +79,6 @@ export default function App() {
         console.log("Chart has loaded!");
       });
     });
-    console.log("HHHHHHHHHHHHHHH")
   }, []);
 
   return (
