@@ -1,22 +1,7 @@
 import "./App.css";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Datafeed from "./api/";
 import { widget as Widget } from "./charting_library";
-
-const defaultProps = {
-  symbol: "BTCUSDT",
-  interval: "15",
-  containerId: "tv_chart_container",
-  libraryPath: "/charting_library/",
-  chartsStorageUrl: "https://saveload.tradingview.com",
-  chartsStorageApiVersion: "1.1",
-  clientId: "tradingview.com",
-  userId: "public_user_id",
-  fullscreen: true,
-  autosize: true,
-  timezone: "Asia/Seoul",
-  studiesOverrides: {},
-};
 
 function getLanguageFromURL() {
   const regex = new RegExp("[\\?&]lang=([^&#]*)");
@@ -27,6 +12,25 @@ function getLanguageFromURL() {
 }
 
 export default function App() {
+  const [pair, setPair] = useState("BTCUSDT");
+  const widget = useRef(null);
+
+  const defaultProps = {
+    symbol: pair,
+    interval: "1",
+    containerId: "tv_chart_container",
+    libraryPath: "/charting_library/",
+    chartsStorageUrl: "https://saveload.tradingview.com",
+    chartsStorageApiVersion: "1.1",
+    clientId: "tradingview.com",
+    userId: "public_user_id",
+    fullscreen: true,
+    autosize: true,
+    timezone: "Asia/Seoul",
+    symbolName: "btcusdt",
+    studiesOverrides: {},
+  };
+
   useEffect(() => {
     const widgetOptions = {
       debug: false,
@@ -48,7 +52,7 @@ export default function App() {
       client_id: defaultProps.clientId,
       user_id: defaultProps.userId,
       fullscreen: defaultProps.fullscreen,
-      autosize: defaultProps.autosize,
+      // autosize: defaultProps.autosize,
       studies_overrides: defaultProps.studiesOverrides,
       favorites: {
         intervals: ["1", "3", "5", "15", "30"],
@@ -73,16 +77,42 @@ export default function App() {
     };
 
     Datafeed.onReady(() => {
-      const widget = new Widget(widgetOptions);
+      widget.current = new Widget(widgetOptions);
 
-      widget.onChartReady(() => {
+      widget.current?.onChartReady(() => {
         console.log("Chart has loaded!");
+        widget
+          .activeChart()
+          .onIntervalChanged()
+          .subscribe(null, (interval) => {
+            console.log("INTERVAL CHANGE", interval);
+          });
       });
     });
+
+    return () => {
+      try {
+        widget.current?.onChartReady(() => {
+          widget.current?.remove();
+        });
+      } catch (e) {
+      } finally {
+        widget.current = null;
+      }
+    };
   }, []);
+
+  useEffect(() => {
+    widget.current?.onChartReady(() => {
+      widget.current?.activeChart().setSymbol(pair, () => {
+        console.log("CHANGE SYMBOL", pair);
+      });
+    });
+  }, [pair]);
 
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
+      <button onClick={() => setPair("ETHUSDT")}>Hello</button>
       <div id={defaultProps.containerId} className={"TVChartContainer"} />
     </div>
   );

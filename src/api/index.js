@@ -90,13 +90,13 @@ export default {
     onResetCacheNeededCallback
   ) => {
     console.log("=====subscribeBars runnning");
-    // stream.subscribeBars(
-    //   symbolInfo,
-    //   resolution,
-    //   onRealtimeCallback,
-    //   subscribeUID,
-    //   onResetCacheNeededCallback
-    // );
+    stream.subscribeBars(
+      symbolInfo,
+      resolution,
+      onRealtimeCallback,
+      subscribeUID,
+      onResetCacheNeededCallback
+    );
   },
   unsubscribeBars: (subscriberUID) => {
     console.log("=====unsubscribeBars running");

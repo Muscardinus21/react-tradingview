@@ -1,90 +1,160 @@
 // api/stream.js
 import historyProvider from "./historyProvider.js";
-// we use Socket.io client to connect to cryptocompare's socket.io stream
-// var io = require("socket.io-client");
-import io from "socket.io-client";
-var socket_url = "wss://streamer.cryptocompare.com";
-var socket = io(socket_url);
+import { RESOLUTION_VALUE } from "./historyProvider.js";
+const socket_url = "wss://stream.binance.com:9443/ws";
+const binanceWS = new WebSocket(socket_url);
+
+// const socket = io(socket_url);
 // keep track of subscriptions
-var _subs = [];
+const _subs = [];
+let prevSymbol;
+let prevResolution;
+
+// {
+//   "e": "kline",     // Event type
+//     "E": 123456789,   // Event time
+//     "s": "BNBBTC",    // Symbol
+//     "k": {
+//   "t": 123400000, // Kline start time
+//       "T": 123460000, // Kline close time
+//       "s": "BNBBTC",  // Symbol
+//       "i": "1m",      // Interval
+//       "f": 100,       // First trade ID
+//       "L": 200,       // Last trade ID
+//       "o": "0.0010",  // Open price
+//       "c": "0.0020",  // Close price
+//       "h": "0.0025",  // High price
+//       "l": "0.0015",  // Low price
+//       "v": "1000",    // Base asset volume
+//       "n": 100,       // Number of trades
+//       "x": false,     // Is this kline closed?
+//       "q": "1.0000",  // Quote asset volume
+//       "V": "500",     // Taker buy base asset volume
+//       "Q": "0.500",   // Taker buy quote asset volume
+//       "B": "123456"   // Ignore
+// }
+// }
 
 export default {
-  subscribeBars: function (symbolInfo, resolution, updateCb, uid, resetCache) {
-    const channelString = createChannelString(symbolInfo);
-    socket.emit("SubAdd", { subs: [channelString] });
+  subscribeBars: async function (
+    symbolInfo,
+    resolution,
+    updateCb,
+    uid,
+    resetCache
+  ) {
+    binanceWS.send(
+      JSON.stringify({
+        method: "UNSUBSCRIBE",
+        params: [`${prevSymbol}@kline_${RESOLUTION_VALUE[prevResolution]}`],
+        id: 1,
+      })
+    );
+    const symbolName = symbolInfo.name.toLowerCase();
+    prevSymbol = symbolName;
+    prevResolution = resolution;
 
-    var newSub = {
-      channelString,
-      uid,
-      resolution,
-      symbolInfo,
-      lastBar: historyProvider.history[symbolInfo.name].lastBar,
-      listener: updateCb,
+    binanceWS.send(
+      JSON.stringify({
+        method: "SUBSCRIBE",
+        params: [`${symbolName}@kline_${RESOLUTION_VALUE[resolution]}`],
+        id: 1,
+      })
+    );
+    binanceWS.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.e) {
+        updateCb({
+          time: data.k.t,
+          close: data.k.c,
+          open: data.k.o,
+          high: data.k.h,
+          low: data.k.l,
+          volume: data.k.v,
+        });
+      }
     };
-    _subs.push(newSub);
+
+    // const channelString = createChannelString(symbolInfo);
+    // socket.emit("SubAdd", { subs: [channelString] });
+    //
+    // const newSub = {
+    //   channelString,
+    //   uid,
+    //   resolution,
+    //   symbolInfo,
+    //   lastBar: historyProvider.history[symbolInfo.name].lastBar,
+    //   listener: updateCb,
+    // };
+    // _subs.push(newSub);
   },
   unsubscribeBars: function (uid) {
-    var subIndex = _subs.findIndex((e) => e.uid === uid);
-    if (subIndex === -1) {
-      //console.log("No subscription found for ",uid)
-      return;
-    }
-    var sub = _subs[subIndex];
-    socket.emit("SubRemove", { subs: [sub.channelString] });
-    _subs.splice(subIndex, 1);
+    // conn.close();
+    // const subIndex = _subs.findIndex((e) => e.uid === uid);
+    // if (subIndex === -1) {
+    //   //console.log("No subscription found for ",uid)
+    //   return;
+    // }
+    // const sub = _subs[subIndex];
+    // socket.emit("SubRemove", { subs: [sub.channelString] });
+    // _subs.splice(subIndex, 1);
   },
 };
 
-socket.on("connect", () => {
+binanceWS.onopen = () => {
   console.log("===Socket connected");
-});
-socket.on("disconnect", (e) => {
-  console.log("===Socket disconnected:", e);
-});
-socket.on("error", (err) => {
-  console.log("====socket error", err);
-});
-socket.on("m", (e) => {
-  // here we get all events the CryptoCompare connection has subscribed to
-  // we need to send this new data to our subscribed charts
-  const _data = e.split("~");
-  if (_data[0] === "3") {
-    // console.log('Websocket Snapshot load event complete')
-    return;
-  }
-  const data = {
-    sub_type: parseInt(_data[0], 10),
-    exchange: _data[1],
-    to_sym: _data[2],
-    from_sym: _data[3],
-    trade_id: _data[5],
-    ts: parseInt(_data[6], 10),
-    volume: parseFloat(_data[7]),
-    price: parseFloat(_data[8]),
-  };
+};
 
-  const channelString = `${data.sub_type}~${data.exchange}~${data.to_sym}~${data.from_sym}`;
-
-  const sub = _subs.find((e) => e.channelString === channelString);
-
-  if (sub) {
-    // disregard the initial catchup snapshot of trades for already closed candles
-    if (data.ts < sub.lastBar.time / 1000) {
-      return;
-    }
-
-    var _lastBar = updateBar(data, sub);
-
-    // send the most recent bar back to TV's realtimeUpdate callback
-    sub.listener(_lastBar);
-    // update our own record of lastBar
-    sub.lastBar = _lastBar;
-  }
-});
+// socket.on("connect", () => {
+//   console.log("===Socket connected");
+// });
+// socket.on("disconnect", (e) => {
+//   console.log("===Socket disconnected:", e);
+// });
+// socket.on("error", (err) => {
+//   console.log("====socket error", err);
+// });
+// socket.on("m", (e) => {
+//   // here we get all events the CryptoCompare connection has subscribed to
+//   // we need to send this new data to our subscribed charts
+//   const _data = e.split("~");
+//   if (_data[0] === "3") {
+//     // console.log('Websocket Snapshot load event complete')
+//     return;
+//   }
+//   const data = {
+//     sub_type: parseInt(_data[0], 10),
+//     exchange: _data[1],
+//     to_sym: _data[2],
+//     from_sym: _data[3],
+//     trade_id: _data[5],
+//     ts: parseInt(_data[6], 10),
+//     volume: parseFloat(_data[7]),
+//     price: parseFloat(_data[8]),
+//   };
+//
+//   const channelString = `${data.sub_type}~${data.exchange}~${data.to_sym}~${data.from_sym}`;
+//
+//   const sub = _subs.find((e) => e.channelString === channelString);
+//
+//   if (sub) {
+//     // disregard the initial catchup snapshot of trades for already closed candles
+//     if (data.ts < sub.lastBar.time / 1000) {
+//       return;
+//     }
+//
+//     const _lastBar = updateBar(data, sub);
+//
+//     // send the most recent bar back to TV's realtimeUpdate callback
+//     sub.listener(_lastBar);
+//     // update our own record of lastBar
+//     sub.lastBar = _lastBar;
+//   }
+// });
 
 // Take a single trade, and subscription record, return updated bar
 function updateBar(data, sub) {
-  var lastBar = sub.lastBar;
+  const lastBar = sub.lastBar;
   let resolution = sub.resolution;
   if (resolution.includes("D")) {
     // 1 day in minutes === 1440
@@ -93,11 +163,11 @@ function updateBar(data, sub) {
     // 1 week in minutes === 10080
     resolution = 10080;
   }
-  var coeff = resolution * 60;
+  const coeff = resolution * 60;
   // console.log({coeff})
-  var rounded = Math.floor(data.ts / coeff) * coeff;
-  var lastBarSec = lastBar.time / 1000;
-  var _lastBar;
+  const rounded = Math.floor(data.ts / coeff) * coeff;
+  const lastBarSec = lastBar.time / 1000;
+  let _lastBar;
 
   if (rounded > lastBarSec) {
     // create a new candle, use last close as open **PERSONAL CHOICE**
@@ -126,7 +196,7 @@ function updateBar(data, sub) {
 
 // takes symbolInfo object as input and creates the subscription string to send to CryptoCompare
 function createChannelString(symbolInfo) {
-  var channel = symbolInfo.name.split(/[:/]/);
+  const channel = symbolInfo.name.split(/[:/]/);
   const exchange = channel[0] === "GDAX" ? "Coinbase" : channel[0];
   const to = channel[2];
   const from = channel[1];
