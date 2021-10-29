@@ -21,9 +21,9 @@ export default {
   history: history,
 
   getBars: function (symbolInfo, resolution, from, to, first, limit) {
-    console.log("FROM", from);
-    console.log("TO", to);
-    console.log("RESOLUTION", resolution);
+    // console.log("FROM", from);
+    // console.log("TO", to);
+    // console.log("RESOLUTION", resolution);
     //example
     //https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&startTime=1634441869000&endTime=1634489749000
 
@@ -35,10 +35,6 @@ export default {
       uri: `${api_root}${queryString}`,
       json: true,
     }).then((data) => {
-      // if (data.Response && data.Response === "Error") {
-      //   console.log("CryptoCompare API error:", data.Message);
-      //   return [];
-      // }
       if (data.length) {
         const bars = data.map((el) => {
           const [time, open, high, low, close, volume] = el;
