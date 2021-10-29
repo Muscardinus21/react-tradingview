@@ -40,13 +40,20 @@ export default function App() {
       container: defaultProps.containerId,
       library_path: defaultProps.libraryPath,
       timezone: defaultProps.timezone,
+      theme: "Dark",
       // locale: getLanguageFromURL() || "en",
       locale: "en",
       disabled_features: [
-        "use_localstorage_for_settings",
+        // "use_localstorage_for_settings",
         "header_symbol_search",
+        "widget_logo",
       ],
-      enabled_features: ["study_templates", "items_favoriting"],
+      enabled_features: [
+        "study_templates",
+        "items_favoriting",
+        "use_localstorage_for_settings",
+        "ave_chart_properties_to_local_storage",
+      ],
       charts_storage_url: defaultProps.chartsStorageUrl,
       charts_storage_api_version: defaultProps.chartsStorageApiVersion,
       client_id: defaultProps.clientId,
@@ -81,8 +88,8 @@ export default function App() {
 
       widget.current?.onChartReady(() => {
         console.log("Chart has loaded!");
-        widget
-          .activeChart()
+        widget.current
+          ?.activeChart()
           .onIntervalChanged()
           .subscribe(null, (interval) => {
             console.log("INTERVAL CHANGE", interval);
@@ -112,7 +119,8 @@ export default function App() {
 
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
-      <button onClick={() => setPair("ETHUSDT")}>Hello</button>
+      <button onClick={() => setPair("ETHUSDT")}>ETHUSDT</button>
+      <button onClick={() => setPair("BTCUSDT")}>BTCUSDT</button>
       <div id={defaultProps.containerId} className={"TVChartContainer"} />
     </div>
   );
