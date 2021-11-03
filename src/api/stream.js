@@ -94,7 +94,6 @@ const updateBar = (data, sub) => {
   let _lastBar;
 
   if (rounded > lastBarSec) {
-    console.log(lastBar);
     // create a new candle, use last close as open **PERSONAL CHOICE**
     _lastBar = {
       time: rounded,

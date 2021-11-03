@@ -22,13 +22,6 @@ export default {
   history: history,
 
   getBars: async function (symbolInfo, resolution, from, to, first, limit) {
-    console.log("GET BARS FROM TO", from, to);
-    // console.log("FROM", new Date(from * 1000));
-    // console.log("TO", new Date(to * 1000));
-    // console.log("RESOLUTION", RESOLUTION_VALUE[resolution]);
-    // console.log("RESOLUTION GAP", resolutionGap(resolution));
-    // console.log("COUNTBACK", limit);
-    // console.log("FIRST", first);
     //example
     //https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&startTime=1634441869000&endTime=1634489749000
 
