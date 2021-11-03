@@ -61,15 +61,19 @@ export default {
   getBars: function (
     symbolInfo,
     resolution,
-    { from, to, firstDataRequest },
+    { from, countBack, to, firstDataRequest },
     onHistoryCallback,
     onErrorCallback
   ) {
     console.log("=====getBars running");
     // console.log('function args',arguments)
-    // console.log(`Requesting bars between ${new Date(from * 1000).toISOString()} and ${new Date(to * 1000).toISOString()}`)
+    // console.log(
+    //   `Requesting bars between ${new Date(
+    //     from * 1000
+    //   ).toISOString()} and ${new Date(to * 1000).toISOString()}`
+    // );
     historyProvider
-      .getBars(symbolInfo, resolution, from, to, firstDataRequest)
+      .getBars(symbolInfo, resolution, from, to, firstDataRequest, countBack)
       .then((bars) => {
         if (bars.length) {
           onHistoryCallback(bars, { noData: false });

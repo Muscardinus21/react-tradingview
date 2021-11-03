@@ -1,4 +1,5 @@
-var rp = require("request-promise").defaults({ json: true });
+import { resolutionGap } from "./utils";
+const rp = require("request-promise").defaults({ json: true });
 
 const api_root = "https://api.binance.com/api/v3/klines";
 const history = {};
@@ -20,41 +21,60 @@ export const RESOLUTION_VALUE = {
 export default {
   history: history,
 
-  getBars: function (symbolInfo, resolution, from, to, first, limit) {
-    // console.log("FROM", from);
-    // console.log("TO", to);
-    // console.log("RESOLUTION", resolution);
+  getBars: async function (symbolInfo, resolution, from, to, first, limit) {
+    console.log("GET BARS FROM TO", from, to);
+    // console.log("FROM", new Date(from * 1000));
+    // console.log("TO", new Date(to * 1000));
+    // console.log("RESOLUTION", RESOLUTION_VALUE[resolution]);
+    // console.log("RESOLUTION GAP", resolutionGap(resolution));
+    // console.log("COUNTBACK", limit);
+    // console.log("FIRST", first);
     //example
     //https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&startTime=1634441869000&endTime=1634489749000
 
-    const queryString = `?symbol=${symbolInfo.name}&interval=${
-      RESOLUTION_VALUE[resolution]
-    }&limit=1000&startTime=${from * 1000}&endTime=${to * 1000}`;
+    let iterations = Math.ceil(limit / 1000);
+    let startTime = from < 1501545600 ? 1501545600 : from;
+    let endTime = startTime + resolutionGap(resolution) * 1000;
+    let rawBars = [];
+    if (to < 0) return rawBars;
 
-    return rp({
-      uri: `${api_root}${queryString}`,
-      json: true,
-    }).then((data) => {
-      if (data.length) {
-        const bars = data.map((el) => {
-          const [time, open, high, low, close, volume] = el;
-          return {
-            time: +time,
-            low: +low,
-            high: +high,
-            open: +open,
-            close: +close,
-            volume: +volume,
-          };
-        });
-        if (first) {
-          const lastBar = bars[bars.length - 1];
-          history[symbolInfo.name] = { lastBar: lastBar };
-        }
-        return bars;
-      } else {
-        return [];
-      }
-    });
+    while (iterations > 0) {
+      const queryString = `?symbol=${symbolInfo.name}&interval=${
+        RESOLUTION_VALUE[resolution]
+      }&startTime=${startTime * 1000}&endTime=${
+        (endTime < to ? endTime : to) * 1000
+      }&limit=1000`;
+      rawBars = rawBars.concat(
+        await rp({
+          uri: `${api_root}${queryString}`,
+          json: true,
+        }).then((data) => {
+          if (data.length) {
+            const bars = data.map((el) => {
+              const [time, open, high, low, close, volume] = el;
+              return {
+                time: +time,
+                low: +low,
+                high: +high,
+                open: +open,
+                close: +close,
+                volume: +volume,
+              };
+            });
+            return bars;
+          } else {
+            return [];
+          }
+        })
+      );
+      startTime = endTime;
+      endTime = endTime + resolutionGap(resolution) * 1000;
+      iterations--;
+    }
+    if (first) {
+      const lastBar = rawBars[rawBars.length - 1];
+      history[symbolInfo.name] = { lastBar };
+    }
+    return rawBars;
   },
 };

@@ -1,6 +1,7 @@
 import "./App.css";
 import React, { useEffect, useState, useRef } from "react";
 import Datafeed from "./api/";
+import dataFeed from "./api/dataFeed";
 import { widget as Widget } from "./charting_library";
 
 function getLanguageFromURL() {
@@ -34,6 +35,7 @@ export default function App() {
   useEffect(() => {
     const widgetOptions = {
       debug: false,
+      // debug: true,
       symbol: defaultProps.symbol,
       datafeed: Datafeed,
       interval: defaultProps.interval,
@@ -47,6 +49,9 @@ export default function App() {
         // "use_localstorage_for_settings",
         "header_symbol_search",
         "widget_logo",
+        "header_compare",
+        "go_to_date",
+        "timeframes_toolbar",
       ],
       enabled_features: [
         "study_templates",
@@ -88,12 +93,18 @@ export default function App() {
 
       widget.current?.onChartReady(() => {
         console.log("Chart has loaded!");
-        widget.current
-          ?.activeChart()
-          .onIntervalChanged()
-          .subscribe(null, (interval) => {
-            console.log("INTERVAL CHANGE", interval);
-          });
+        // widget.current
+        //   ?.activeChart()
+        //   .onIntervalChanged()
+        //   .subscribe(null, (interval) => {
+        //     console.log("INTERVAL CHANGE", interval);
+        //   });
+        // widget.current
+        //   ?.activeChart()
+        //   .onVisibleRangeChanged()
+        //   .subscribe(null, ({ from, to }) =>
+        //     console.log("=============FROM TO", from, to)
+        //   );
       });
     });
 
